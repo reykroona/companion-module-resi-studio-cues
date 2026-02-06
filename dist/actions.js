@@ -25,6 +25,7 @@ function UpdateActions(self) {
                     type: 'textinput',
                     label: 'Cue name',
                     default: 'Web Cue',
+                    useVariables: true,
                 },
                 {
                     id: 'privateCue',
@@ -47,13 +48,14 @@ function UpdateActions(self) {
                     type: 'textinput',
                     label: 'Custom position (HH:MM:SS or HH:MM:SS.mmm)',
                     default: '00:00:00.000',
+                    useVariables: true,
                 },
             ],
             callback: async (evt) => {
-                const name = String(evt.options.name ?? '').trim();
+                const name = (await self.parseVariablesInString(String(evt.options.name ?? ''))).trim();
                 const privateCue = Boolean(evt.options.privateCue);
                 const positionMode = String(evt.options.positionMode ?? 'player');
-                const customPosition = String(evt.options.customPosition ?? '').trim();
+                const customPosition = (await self.parseVariablesInString(String(evt.options.customPosition ?? ''))).trim();
                 await self.addCueFromPosition({
                     name,
                     privateCue,
@@ -70,6 +72,7 @@ function UpdateActions(self) {
                     type: 'textinput',
                     label: 'Cue name',
                     default: '',
+                    useVariables: true,
                 },
                 {
                     id: 'matchMode',
@@ -99,7 +102,7 @@ function UpdateActions(self) {
                 },
             ],
             callback: async (evt) => {
-                const cueName = String(evt.options.cueName ?? '');
+                const cueName = await self.parseVariablesInString(String(evt.options.cueName ?? ''));
                 const matchMode = String(evt.options.matchMode ?? 'exact');
                 const deleteMode = String(evt.options.deleteMode ?? 'first');
                 const onlyMine = Boolean(evt.options.onlyMine);
@@ -134,6 +137,7 @@ function UpdateActions(self) {
                     type: 'textinput',
                     label: 'Cue name',
                     default: '',
+                    useVariables: true,
                 },
                 {
                     id: 'matchMode',
@@ -147,7 +151,7 @@ function UpdateActions(self) {
                 },
             ],
             callback: async (evt) => {
-                const cueName = String(evt.options.cueName ?? '');
+                const cueName = await self.parseVariablesInString(String(evt.options.cueName ?? ''));
                 const mode = String(evt.options.matchMode ?? 'exact');
                 self.lookupCueByName(cueName, mode);
             },

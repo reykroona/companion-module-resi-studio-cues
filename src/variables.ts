@@ -40,6 +40,8 @@ export function UpdateVariableDefinitions(instance: ModuleInstance): void {
 { variableId: 'lookup_cue_position', name: 'Lookup cue position (HH:MM:SS.ms)' },
 { variableId: 'lookup_cue_position_sec', name: 'Lookup cue position (seconds)' },
 { variableId: 'lookup_cue_tod', name: 'Lookup cue time-of-day' },
+{ variableId: 'playback_last_change_epoch_ms', name: 'Playback last position change (epoch ms)' },
+
 	]
 
 	instance.setVariableDefinitions(vars)

@@ -64,6 +64,7 @@ private cues: Array<{ uuid: string; name: string; positionMs: number; user?: str
 
 	private lastCueRefreshMs = 0
 private cueRefreshInFlight = false
+private lastPositionSec?: number
 
 
 	constructor(internal: unknown) {
@@ -353,9 +354,18 @@ private cueRefreshInFlight = false
 			const posMs = this.parseTimeToMs(p.position ?? '00:00:00')
 			const eventId = (p.eventId as string | undefined) ?? undefined
 
+			const posSec = Math.floor(posMs / 1000)
+
+if (this.lastPositionSec === undefined || this.lastPositionSec !== posSec) {
+	this.lastPositionSec = posSec
+	this.setVariableValues({
+		playback_last_change_epoch_ms: String(Date.now()),
+	})
+}
+
 			this.setVariableValues({
 				current_position: p.position ?? '',
-				current_position_sec: String(Math.floor(posMs / 1000)),
+current_position_sec: String(posSec),
 				current_event_id: eventId ?? '',
 				last_error: '',
 			})
@@ -557,79 +567,98 @@ private secondsToHms(totalSeconds: number): string {
 }
 
 
-	private computeAndSetCueVars(posMs: number): void {
-		if (!Number.isFinite(posMs)) {
-			this.log('warn', `posMs is not finite. current_position parse failed.`)
-			this.setVariableValues({
-				next_cue_time_in_seconds: '',
-				prev_cue_time_ago_in_seconds: '',
-			})
-			return
-		}
+private computeAndSetCueVars(posMs: number): void {
+	if (!Number.isFinite(posMs)) {
+		this.log('warn', `posMs is not finite. current_position parse failed.`)
+		this.setVariableValues({
+			next_cue_name: '',
+			next_cue_time_in_seconds: '',
+			next_cue_time_in_hms: '',
+			next_cue_position: '',
+			next_cue_tod: '',
 
-		if (!this.cues || this.cues.length === 0) {
-			this.setVariableValues({
-				next_cue_name: '',
-				next_cue_time_in_seconds: '',
-				next_cue_position: '',
-				next_cue_tod: '',
-				prev_cue_name: '',
-				prev_cue_time_ago_in_seconds: '',
-				prev_cue_position: '',
-				prev_cue_tod: '',
-			})
-			return
-		}
-
-		let next: (typeof this.cues)[number] | undefined
-		let prev: (typeof this.cues)[number] | undefined
-
-		for (const c of this.cues) {
-			if (c.positionMs > posMs) {
-				next = c
-				break
-			}
-			prev = c
-		}
-
-		const vars: Record<string, string> = {}
-
-		if (next) {
-			const secsUntil = Math.max(0, Math.ceil((next.positionMs - posMs) / 1000))
-			vars.next_cue_name = next.name ?? ''
-			vars.next_cue_time_in_seconds = String(secsUntil)
-			vars.next_cue_position = this.msToHms(next.positionMs)
-			vars.next_cue_tod = this.eventMediaStartEpochMs ? this.formatTod(this.eventMediaStartEpochMs + next.positionMs) : ''
-			vars.next_cue_time_in_hms = this.secondsToHms(secsUntil)
-
-		} else {
-			const fallback = Number(this.config.noNextCueSeconds ?? 0)
-			vars.next_cue_name = ''
-			vars.next_cue_time_in_seconds = fallback > 0 ? String(fallback) : ''
-			vars.next_cue_position = ''
-			vars.next_cue_tod = ''
-			vars.next_cue_time_ago_in_hms = ''
-
-		}
-
-		if (prev) {
-			const secsAgo = Math.max(0, Math.floor((posMs - prev.positionMs) / 1000))
-			vars.prev_cue_name = prev.name ?? ''
-			vars.prev_cue_time_ago_in_seconds = String(secsAgo)
-			vars.prev_cue_position = this.msToHms(prev.positionMs)
-			vars.prev_cue_tod = this.eventMediaStartEpochMs ? this.formatTod(this.eventMediaStartEpochMs + prev.positionMs) : ''
-			vars.prev_cue_time_ago_in_hms = this.secondsToHms(secsAgo)
-		} else {
-			vars.prev_cue_name = ''
-			vars.prev_cue_time_ago_in_seconds = ''
-			vars.prev_cue_position = ''
-			vars.prev_cue_tod = ''
-			vars.prev_cue_time_ago_in_hms = ''
-
-		}
-
-		this.setVariableValues(vars)
+			prev_cue_name: '',
+			prev_cue_time_ago_in_seconds: '',
+			prev_cue_time_ago_in_hms: '',
+			prev_cue_position: '',
+			prev_cue_tod: '',
+		})
+		return
 	}
+
+	if (!this.cues || this.cues.length === 0) {
+		this.setVariableValues({
+			next_cue_name: '',
+			next_cue_time_in_seconds: '',
+			next_cue_time_in_hms: '',
+			next_cue_position: '',
+			next_cue_tod: '',
+
+			prev_cue_name: '',
+			prev_cue_time_ago_in_seconds: '',
+			prev_cue_time_ago_in_hms: '',
+			prev_cue_position: '',
+			prev_cue_tod: '',
+		})
+		return
+	}
+
+	// Find next cue (first > posMs) and prev cue (last <= posMs)
+	let next: (typeof this.cues)[number] | undefined
+	let prev: (typeof this.cues)[number] | undefined
+
+	for (const c of this.cues) {
+		if (c.positionMs > posMs) {
+			next = c
+			break
+		}
+		prev = c
+	}
+
+	const vars: Record<string, string> = {}
+
+	// --- NEXT ---
+	if (next) {
+		const secsUntil = Math.max(0, Math.ceil((next.positionMs - posMs) / 1000))
+		vars.next_cue_name = next.name ?? ''
+		vars.next_cue_time_in_seconds = String(secsUntil)
+		vars.next_cue_time_in_hms = this.secondsToHms(secsUntil)
+		vars.next_cue_position = this.msToHms(next.positionMs)
+		vars.next_cue_tod = this.eventMediaStartEpochMs
+			? this.formatTod(this.eventMediaStartEpochMs + next.positionMs)
+			: ''
+	} else {
+		// Optional fallback if user wants a default countdown when there is no "next cue"
+		const fallback = Number(this.config.noNextCueSeconds ?? 0)
+		const secs = Number.isFinite(fallback) && fallback > 0 ? Math.floor(fallback) : NaN
+
+		vars.next_cue_name = ''
+		vars.next_cue_time_in_seconds = Number.isFinite(secs) ? String(secs) : ''
+		vars.next_cue_time_in_hms = Number.isFinite(secs) ? this.secondsToHms(secs) : ''
+		vars.next_cue_position = ''
+		vars.next_cue_tod = ''
+	}
+
+	// --- PREV ---
+	if (prev) {
+		const secsAgo = Math.max(0, Math.floor((posMs - prev.positionMs) / 1000))
+		vars.prev_cue_name = prev.name ?? ''
+		vars.prev_cue_time_ago_in_seconds = String(secsAgo)
+		vars.prev_cue_time_ago_in_hms = this.secondsToHms(secsAgo)
+		vars.prev_cue_position = this.msToHms(prev.positionMs)
+		vars.prev_cue_tod = this.eventMediaStartEpochMs
+			? this.formatTod(this.eventMediaStartEpochMs + prev.positionMs)
+			: ''
+	} else {
+		vars.prev_cue_name = ''
+		vars.prev_cue_time_ago_in_seconds = ''
+		vars.prev_cue_time_ago_in_hms = ''
+		vars.prev_cue_position = ''
+		vars.prev_cue_tod = ''
+	}
+
+	this.setVariableValues(vars)
+}
 
 	private async refreshVenuesAndPlayers(): Promise<void> {
 		if (!this.customerId) return
