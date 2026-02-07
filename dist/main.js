@@ -45,7 +45,7 @@ class ModuleInstance extends base_1.InstanceBase {
         this.updatePresets();
         this.updateVariableDefinitions();
         // Auth + customerId
-        await this.refreshProfileSmart(true);
+        await this.refreshProfileSmart(false);
         // Load venues/players once
         await this.refreshVenuesAndPlayers();
         // Auto-select default player if configured
@@ -92,8 +92,10 @@ class ModuleInstance extends base_1.InstanceBase {
     async refreshProfileSmart(forceLogin = false) {
         try {
             await this.ensureAuthenticated(forceLogin);
+            if (!this.cookieHeader)
+                return; // missing creds or login not possible yet
             await this.fetchProfile();
-            this.updateStatus(base_1.InstanceStatus.Ok, 'Connected');
+            this.updateStatus(base_1.InstanceStatus.Ok);
             this.setVariableValues({ auth_status: 'OK', last_error: '' });
         }
         catch (err) {
@@ -159,12 +161,12 @@ class ModuleInstance extends base_1.InstanceBase {
         const username = this.config.username;
         const password = this.secrets?.password;
         if (!username || !password) {
+            this.updateStatus(base_1.InstanceStatus.BadConfig, 'Missing username/password');
             this.setVariableValues({
                 auth_status: 'Missing credentials',
-                last_error: 'Missing username/password',
+                last_error: 'Enter username/password in config',
             });
-            this.updateStatus(base_1.InstanceStatus.BadConfig, 'Missing credentials');
-            throw new Error('Missing username/password');
+            return;
         }
         // If we already have cookies and it hasn’t been too long, skip login
         const ageMs = Date.now() - this.lastLoginMs;
