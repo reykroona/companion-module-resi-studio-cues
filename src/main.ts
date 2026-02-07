@@ -82,7 +82,7 @@ private lastPositionSec?: number
 		this.updateVariableDefinitions()
 
 		// Auth + customerId
-		await this.refreshProfileSmart(true)
+		await this.refreshProfileSmart(false)
 
 		// Load venues/players once
 		await this.refreshVenuesAndPlayers()
@@ -142,9 +142,11 @@ private lastPositionSec?: number
 
 	private async refreshProfileSmart(forceLogin = false): Promise<void> {
 		try {
-			await this.ensureAuthenticated(forceLogin)
-			await this.fetchProfile()
-			this.updateStatus(InstanceStatus.Ok, 'Connected')
+await this.ensureAuthenticated(forceLogin)
+if (!this.cookieHeader) return // missing creds or login not possible yet
+await this.fetchProfile()
+this.updateStatus(InstanceStatus.Ok)
+
 			this.setVariableValues({ auth_status: 'OK', last_error: '' })
 		} catch (err: any) {
 			const msg = err?.message ?? String(err)
@@ -215,14 +217,14 @@ private lastPositionSec?: number
 		const username = this.config.username
 		const password = this.secrets?.password
 
-		if (!username || !password) {
-			this.setVariableValues({
-				auth_status: 'Missing credentials',
-				last_error: 'Missing username/password',
-			})
-			this.updateStatus(InstanceStatus.BadConfig, 'Missing credentials')
-			throw new Error('Missing username/password')
-		}
+if (!username || !password) {
+	this.updateStatus(InstanceStatus.BadConfig, 'Missing username/password')
+	this.setVariableValues({
+		auth_status: 'Missing credentials',
+		last_error: 'Enter username/password in config',
+	})
+	return
+}
 
 		// If we already have cookies and it hasn’t been too long, skip login
 		const ageMs = Date.now() - this.lastLoginMs
