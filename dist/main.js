@@ -259,6 +259,8 @@ class ModuleInstance extends base_1.InstanceBase {
             if (!this.selectedVenueUuid || !this.selectedPlayerHardwareId)
                 return;
             await this.ensureAuthenticated(false);
+            if (!this.cookieHeader)
+                return;
             const res = await fetch(`https://central.resi.io/api_v2.svc/users/${this.selectedVenueUuid}/players`, {
                 method: 'GET',
                 headers: this.buildAuthHeaders(),
@@ -317,6 +319,8 @@ class ModuleInstance extends base_1.InstanceBase {
         if (!this.customerId || !this.currentEventId)
             return;
         await this.ensureAuthenticated(false);
+        if (!this.cookieHeader)
+            return;
         const evRes = await fetch(`https://central.resi.io/api/v3/customers/${this.customerId}/events/${this.currentEventId}`, { method: 'GET', headers: this.buildAuthHeaders() });
         if (!evRes.ok)
             throw new Error(`event detail failed (${evRes.status})`);
@@ -364,6 +368,8 @@ class ModuleInstance extends base_1.InstanceBase {
         this.pollInFlight = true;
         try {
             await this.ensureAuthenticated(false);
+            if (!this.cookieHeader)
+                return;
             try {
                 await this.fetchProfile();
             }
@@ -545,6 +551,8 @@ class ModuleInstance extends base_1.InstanceBase {
         if (!this.customerId)
             return;
         await this.ensureAuthenticated(false);
+        if (!this.cookieHeader)
+            return;
         // venues
         const venuesRes = await fetch(`https://central.resi.io/api/v3/customers/${this.customerId}/venues`, {
             method: 'GET',
@@ -683,6 +691,8 @@ class ModuleInstance extends base_1.InstanceBase {
             position = this.normalizeHmsMs(custom);
         }
         await this.ensureAuthenticated(false);
+        if (!this.cookieHeader)
+            return;
         const url = `https://central.resi.io/api_v2.svc/streamprofiles/${this.currentEventProfileId}/events/${this.currentEventId}/cues`;
         const body = { position, name: cueName, privateCue: !!opts.privateCue, user };
         const res = await fetch(url, {
