@@ -334,6 +334,7 @@ if (!username || !password) {
 			if (!this.selectedVenueUuid || !this.selectedPlayerHardwareId) return
 
 			await this.ensureAuthenticated(false)
+if (!this.cookieHeader) return
 
 			const res = await fetch(`https://central.resi.io/api_v2.svc/users/${this.selectedVenueUuid}/players`, {
 				method: 'GET',
@@ -400,6 +401,7 @@ current_position_sec: String(posSec),
 	private async refreshEventProfileAndCues(): Promise<void> {
 		if (!this.customerId || !this.currentEventId) return
 		await this.ensureAuthenticated(false)
+if (!this.cookieHeader) return
 
 		const evRes = await fetch(
 			`https://central.resi.io/api/v3/customers/${this.customerId}/events/${this.currentEventId}`,
@@ -464,6 +466,7 @@ this.cues = cuesJson
 
 		try {
 			await this.ensureAuthenticated(false)
+if (!this.cookieHeader) return
 
 			try {
 				await this.fetchProfile()
@@ -666,6 +669,7 @@ private computeAndSetCueVars(posMs: number): void {
 		if (!this.customerId) return
 
 		await this.ensureAuthenticated(false)
+if (!this.cookieHeader) return
 
 		// venues
 		const venuesRes = await fetch(`https://central.resi.io/api/v3/customers/${this.customerId}/venues`, {
@@ -822,6 +826,7 @@ public async addCueFromPosition(opts: {
 	}
 
 	await this.ensureAuthenticated(false)
+if (!this.cookieHeader) return
 
 	const url = `https://central.resi.io/api_v2.svc/streamprofiles/${this.currentEventProfileId}/events/${this.currentEventId}/cues`
 	const body = { position, name: cueName, privateCue: !!opts.privateCue, user }
