@@ -1,6 +1,6 @@
 # Resi Studio Cues (Bitfocus Companion Module)
 
-This module logs into **studio.resi.io / central.resi.io** with a username + password, reads decoder/player playback position, loads cue points for the current event, and exposes variables/actions for cue timing and cue management.
+This module logs into **studio.resi.io / central.resi.io** with a username and password, reads decoder/player playback position, tracks encoder events, loads cue points, and exposes variables/actions for cue timing and cue management.
 
 The main goal is to drive things like a **countdown clock in ProPresenter** (time until next cue, next cue name, etc).
 
@@ -22,6 +22,13 @@ The main goal is to drive things like a **countdown clock in ProPresenter** (tim
   - `current_position`
   - `current_position_sec`
   - `current_event_id`
+
+### Encoder event tracking
+- Loads the account's events and presents the available encoders and events in action menus.
+- An encoder can be selected manually or configured as the default encoder at startup.
+- While the selected encoder is started, the module finds the event whose `startTime` and `stopAfter` contain the current time and loads its cues automatically.
+- The selected event exposes elapsed stream variables, including `stream_elapsed`, `stream_elapsed_hm`, `stream_elapsed_ms`, and `stream_elapsed_ss`.
+- The encoder position includes a four-second offset to account for encoder latency.
 
 ### Cue loading (per event)
 When the current `eventId` changes, the module loads:
@@ -48,9 +55,11 @@ Cues are stored locally and used to compute **next/prev** cue timing from the li
   - `prev_cue_tod` (24-hour)
 
 ### Cue management actions
-- Add cue (player position or custom time)
+- Add cue (current event position, player position, or custom time)
 - Lookup cue by name (stores into `lookup_*` variables)
 - Delete cue by name (looks up UUID, deletes by UUID)
+
+When the player position is unavailable, the player-position cue action falls back to the selected event's calculated position.
 
 ---
 
@@ -76,6 +85,7 @@ Cues are stored locally and used to compute **next/prev** cue timing from the li
 Typical config fields:
 - **Username / Email**
 - **Password** (secret)
+- **Default encoder** (optional)
 - **Default Player** (optional)
 - **Polling intervals**
   - Playback position refresh (fast, e.g. 2000ms)
@@ -134,6 +144,10 @@ Playback frozen requires:
 - Next cue display (with T- countdown)
 - Previous cue display
 
+### Encoder and event selection
+- Select a Resi event
+- Select an encoder and follow its active event
+
 ### Maintenance
 - Refresh profile
 - Refresh venues/players list
@@ -151,12 +165,7 @@ Playback frozen requires:
 - The Resi API endpoints used here are not public/stable; breaking changes may occur.
 - Avoid polling cues every 2 seconds. Recommended cue refresh while playing is 10–30 seconds unless you have a specific need.
 - Companion config fields are not truly read-only, so status is exposed via variables + instance status.
+- Encoder event detection polls every 10 seconds while an encoder is selected.
+- Encoder event detection requires both `startTime` and `stopAfter` on the Resi event. Events without a complete time window are not selected automatically.
 
 ---
-
-## Roadmap Ideas
-
-- Optional periodic cue refresh while playing (rate-limited)
-- Extra feedback: "No player selected"
-- Extra feedback: "No next cue"
-- More presets for ProPresenter integration workflows
