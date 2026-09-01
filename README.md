@@ -1,8 +1,8 @@
 # Resi Studio Cues (Bitfocus Companion Module)
 
-This module logs into **studio.resi.io / central.resi.io** with a username and password, reads decoder/player playback position, tracks encoder events, loads cue points, and exposes variables/actions for cue timing and cue management.
+This module logs into **studio.resi.io / central.resi.io** with a username and password, tracks Resi encoder events, and creates and reads shared cue points. Encoder cues are available to decoder operators at other campuses and can also be viewed in the Resi website, so everyone can see when the marked events occur.
 
-The main goal is to drive things like a **countdown clock in ProPresenter** (time until next cue, next cue name, etc).
+The module can drive workflows such as a **countdown clock in ProPresenter** while keeping cue timing tied to the shared Resi event.
 
 ---
 
@@ -60,6 +60,8 @@ Cues are stored locally and used to compute **next/prev** cue timing from the li
 - Delete cue by name (looks up UUID, deletes by UUID)
 
 When the player position is unavailable, the player-position cue action falls back to the selected event's calculated position.
+
+Cues created by the module are written to the selected Resi event. They are not local Companion markers, so decoder operators and other Resi users can use the same cues wherever that event is available.
 
 ---
 
