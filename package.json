@@ -1,0 +1,23 @@
+{
+  "name": "companion-module-resi-studio-cues",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "yarn@4.17.0",
+  "main": "dist/main.js",
+  "type": "module",
+  "engines": {
+    "node": "^22.20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch"
+  },
+  "dependencies": {
+    "@companion-module/base": "~2.0.4"
+  },
+  "devDependencies": {
+    "@companion-module/tools": "^3.0.2",
+    "@types/node": "^22.20.0",
+    "typescript": "~6.0.3"
+  }
+}
