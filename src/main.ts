@@ -62,7 +62,7 @@ export class ModuleInstance extends InstanceBase {
 	private encoderEventPollInFlight = false
 	private streamElapsedTimer?: NodeJS.Timeout
 	private readonly encoderPositionOffsetMs = 4000 // 4 seconds offset to account for encoder latency
-	
+
 	private cues: Array<{ uuid: string; name: string; positionMs: number; user?: string; privateCue?: boolean }> = []
 
 	private selectedVenueUuid?: string
@@ -95,7 +95,7 @@ export class ModuleInstance extends InstanceBase {
 	constructor(internal: unknown) {
 		super(internal)
 	}
-	
+
 	private updateStreamElapsed(): void {
 	const positionMs = this.getCurrentEncoderPositionMs()
 
@@ -469,7 +469,7 @@ public getEncoderChoices(): Array<{ id: string; label: string }> {
 	}
 
 	private async pollPlayer(): Promise<void> {
-		
+
 		if (this.playerPollInFlight) return
 		this.playerPollInFlight = true
 
@@ -971,7 +971,7 @@ private async findActiveEventForEncoder(): Promise<void> {
 			clearInterval(this.streamElapsedTimer)
 			this.streamElapsedTimer = undefined
 		}
-			
+
 			this.log(
 				'info',
 				`AUTO EVENT: No active event found for encoder ${this.selectedEncoderId}`
@@ -1259,7 +1259,7 @@ public async selectEncoder(encoderId: string): Promise<void> {
 
 	if (!id) {
 		this.selectedEncoderId = undefined
-		
+
 		this.setVariableValues({
 			encoder_name: 'NONE',
 		})
@@ -1281,7 +1281,7 @@ public async selectEncoder(encoderId: string): Promise<void> {
 		this.setVariableValues({
 			encoder_name: encoderName,
 		})
-	
+
 		this.log(
 		'info',
 		`Selected encoder "${encoderName}" (${id})`
