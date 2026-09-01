@@ -948,7 +948,7 @@ private async findActiveEventForEncoder(): Promise<void> {
 		}
 
 		const events = (await res.json()) as ResiEvent[]
-		
+
 
 		const now = Date.now()
 
